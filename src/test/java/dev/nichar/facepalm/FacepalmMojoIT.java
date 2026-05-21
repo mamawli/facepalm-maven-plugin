@@ -62,8 +62,9 @@ class FacepalmMojoIT {
         assertThat(result).isSuccessful();
 
         assertThat(result).out().warn()
-            .contains("[Generic Password Assignment] Score: 69.8 (R:85/C:60) - \uD83D\uDFE1");
-        assertThat(result).out().info()
+            .anyMatch(line -> line.contains(
+                "[Generic Password Assignment] Score: 69.8 (R:85/C:60) - "));
+        assertThat(result).out().warn()
             .anyMatch(line -> line.contains(
                 "facepalm-maven-plugin/target/maven-it/dev/nichar/facepalm/FacepalmMojoIT/dirty_project/project/src/main/resources/application.properties:2"));
 
@@ -91,8 +92,9 @@ class FacepalmMojoIT {
         assertThat(result).isFailure();
 
         assertThat(result).out().warn()
-            .contains("[Generic Password Assignment] Score: 69.8 (R:85/C:60) - \uD83D\uDFE1");
-        assertThat(result).out().info()
+            .anyMatch(line -> line.contains(
+                "[Generic Password Assignment] Score: 69.8 (R:85/C:60) - "));
+        assertThat(result).out().warn()
             .anyMatch(line -> line.contains(
                 "facepalm-maven-plugin/target/maven-it/dev/nichar/facepalm/FacepalmMojoIT/dirty_project_fail_on_warnings/project/src/main/resources/application.properties:2"));
 

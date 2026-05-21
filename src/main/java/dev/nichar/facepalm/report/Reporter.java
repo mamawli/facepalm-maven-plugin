@@ -216,23 +216,19 @@ public class Reporter {
                 .filter(f -> f.getSeverity(scoringConfig) != Severity.INFO)
                 .sorted(Comparator.comparing(Finding::getNumericScore).reversed())
                 .forEach(f -> {
-                    final var sev = f.getSeverity(scoringConfig);
+                    final var severity = f.getSeverity(scoringConfig);
 
                     final var message = String.format(
                         "[%s] Score: %.1f (R:%d/C:%d) - %s",
                         f.getPatternName(), f.getNumericScore(),
                         f.getRiskScore(), f.getConfidenceScore(),
-                        f.getSeverity(scoringConfig).getIcon());
+                        f.getContext().getPath() + ":" + f.getLineNumber());
 
                     // Emit high-risk findings at the error level for visibility.
-                    if (sev == Severity.ERROR) {
-                        log.error(message);
-                    } else {
-                        log.warn(message);
+                    switch (severity) {
+                        case ERROR -> log.error(message);
+                        case WARNING, INFO -> log.warn(message);
                     }
-
-                    log.info("  Location: " + f.getContext().getPath() + ":" + f.getLineNumber());
-                    log.info("");
                 });
         }
 

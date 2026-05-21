@@ -42,15 +42,27 @@ This is a guardrail, not a report.
 Add it to your `pom.xml`:
 
 ```xml
-<build>
-    <plugins>
-        <plugin>
-            <groupId>dev.nichar</groupId>
-            <artifactId>facepalm-maven-plugin</artifactId>
-            <version>1.0.0</version>
-        </plugin>
-    </plugins>
-</build>
+<plugin>
+    <groupId>dev.nichar</groupId>
+    <artifactId>facepalm-maven-plugin</artifactId>
+    <version>1.0.0</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>scan</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+```xml
+<pluginRepositories>
+    <pluginRepository>
+        <id>nikolas-charalambidis-packages</id>
+        <url>https://maven.pkg.github.com/nikolas-charalambidis/*</url>
+    </pluginRepository>
+</pluginRepositories>
 ```
 
 To be effective, hook it into a Git pre-commit hook.
@@ -84,8 +96,8 @@ chmod +x .git/hooks/pre-commit
 
 ## Philosophy
 
-You don’t need another report.  
-You need a hard stop before damage happens.  
+You don’t need another report.
+You need a hard stop before damage happens.
 Zero regret.
 
 ___
@@ -97,6 +109,7 @@ ___
 - [Detection Patterns](docs/patterns.md) - What is detected and how to extend.
 - [Reporting](docs/reporting.md) - How to generate reports.
 - [FAQ](docs/faq.md) - False positives, performance, and more.
+- [Site](https://www.nikolas-charalambidis.com/facepalm-maven-plugin/) - Site
 
 ___
 
