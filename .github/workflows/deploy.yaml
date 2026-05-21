@@ -1,0 +1,94 @@
+name: Release & Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Type of version bump'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write # REQUIRED: Allows the bot to commit the updated pom.xml back to master
+  packages: write  # REQUIRED: Allows uploading the JAR to GitHub Packages
+
+jobs:
+  release:
+    name: Automate Release and Version Bump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches all history so git tags work cleanly
+
+      - name: Setup Java 17 & Package Registry Credentials
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+          server-id: github
+
+      - name: Configure Git Bot User
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # Step 1: Strip "-SNAPSHOT" from the current pom.xml to fix the release version
+      - name: Set Release Version
+        id: release_version
+        run: |
+          mvn versions:set -DremoveSnapshot=true -DgenerateBackupPoms=false
+          CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Staged release version: $CURRENT_VERSION"
+
+      # Step 2: Run verification and deploy the clean stable JAR
+      - name: Build, Verify, and Deploy Stable JAR
+        run: mvn -B clean deploy site:site
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 3: Commit and tag the clean release version
+      - name: Commit and Tag Stable Release
+        run: |
+          VERSION=${{ steps.release_version.outputs.version }}
+          git add pom.xml
+          git commit -m "CI: Release v$VERSION [skip ci]"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+
+      # Step 4: Calculate the next development version based on the user's choice input
+      - name: Calculate Next Snapshot Version
+        id: next_version
+        run: |
+          mvn build-helper:parse-version versions:set \
+            -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT \
+            -DgenerateBackupPoms=false
+          
+          if [ "${{ github.event.inputs.bump_type }}" = "minor" ]; then
+            mvn build-helper:parse-version versions:set \
+              -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.nextMinorVersion}.0-SNAPSHOT \
+              -DgenerateBackupPoms=false
+          elif [ "${{ github.event.inputs.bump_type }}" = "major" ]; then
+            mvn build-helper:parse-version versions:set \
+              -DnewVersion=\${parsedVersion.nextMajorVersion}.0.0-SNAPSHOT \
+              -DgenerateBackupPoms=false
+          fi
+          
+          NEXT_SNAPSHOT=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "snapshot=$NEXT_SNAPSHOT" >> $GITHUB_OUTPUT
+          echo "Calculated next snapshot: $NEXT_SNAPSHOT"
+
+      # Step 5: Commit the new development snapshot and push everything back up
+      - name: Commit Next Snapshot and Push to GitHub
+        run: |
+          NEXT=${{ steps.next_version.outputs.snapshot }}
+          git add pom.xml
+          git commit -m "CI: Bump snapshot $NEXT [skip ci]"
+          git push origin master --tags
