@@ -109,7 +109,7 @@ public class FacepalmRunner {
             .lineNumber(finding.getLineNumber())
             .maskedSecret(finding.getMaskedSecret())
             .contextSnippet(finding.getContextSnippet())
-            .finalScore(finding.getNumericScore())
+            .finalScore(finding.getNumericScore(config))
             .finalSeverity(finding.getSeverity(config).name())
             .riskScore(finding.getRiskScore())
             .confidenceScore(finding.getConfidenceScore())

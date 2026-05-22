@@ -15,6 +15,7 @@ import dev.nichar.facepalm.config.PatternConfig;
 import dev.nichar.facepalm.config.PostProcessorConfig;
 import dev.nichar.facepalm.config.ScoringConfig;
 import dev.nichar.facepalm.engine.FacepalmRunner;
+import dev.nichar.facepalm.engine.ScoringStrategy;
 import dev.nichar.facepalm.module.FacepalmConfigModule;
 import dev.nichar.facepalm.module.FacepalmLogModule;
 import java.io.File;
@@ -100,6 +101,12 @@ public class FacepalmMojo extends AbstractMojo {
     private boolean showSkipped;
 
     /**
+     * Strategy used to combine risk and confidence into a final score.
+     */
+    @Parameter(property = "scoring.strategy", defaultValue = "WEIGHTED_QUADRATIC")
+    private ScoringStrategy scoringStrategy;
+
+    /**
      * Minimum score to trigger a critical failure.
      */
     @Parameter(property = "errorThreshold", defaultValue = "80")
@@ -159,8 +166,8 @@ public class FacepalmMojo extends AbstractMojo {
         // Map Maven parameters to internal configuration.
         final var engine = new EngineConfig(threads, maxFileSizeBytes, skipBinaryRegex, skipDirs, showProcessed,
             showSkipped);
-        final var scoring = new ScoringConfig(errorThreshold, warningThreshold, showScoring, showDetails, failOnError,
-            failOnWarnings);
+        final var scoring = new ScoringConfig(scoringStrategy, errorThreshold, warningThreshold, showScoring,
+            showDetails, failOnError, failOnWarnings);
         final var effectiveConfig = new FacepalmConfig(engine, scoring, evaluators, postProcessing, patterns);
 
         // Discover components using Sisu indexing.

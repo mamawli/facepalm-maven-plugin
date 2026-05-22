@@ -6,6 +6,7 @@
 
 package dev.nichar.facepalm.config;
 
+import dev.nichar.facepalm.engine.ScoringStrategy;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScoringConfig {
+
+    /**
+     * Strategy used to combine risk and confidence into a final score.
+     */
+    private ScoringStrategy strategy = ScoringStrategy.WEIGHTED_QUADRATIC;
 
     /**
      * Minimum score to classify a finding as high-risk (Critical).
@@ -47,4 +53,11 @@ public class ScoringConfig {
      * Terminate the build on moderate-risk findings.
      */
     private boolean failOnWarnings = false;
+
+    /**
+     * Returns the configured scoring strategy, falling back to the historical default.
+     */
+    public ScoringStrategy getStrategy() {
+        return strategy == null ? ScoringStrategy.WEIGHTED_QUADRATIC : strategy;
+    }
 }

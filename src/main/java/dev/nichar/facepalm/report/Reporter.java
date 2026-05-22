@@ -143,6 +143,8 @@ public class Reporter {
                                   @Nonnull final ScanStatistics stats,
                                   @Nonnull final String rootPath,
                                   @Nonnull final String version) {
+        final var scoringConfig = context.getScoring();
+
         // Group findings by unique secret fingerprints for deduplicated reporting.
         final var grouped = findings.stream()
             .collect(Collectors.groupingBy(f -> Base64.getEncoder().encodeToString((f.getPatternName() + ":" + f
@@ -168,7 +170,7 @@ public class Reporter {
                 .primaryRuleId(primary.getPatternName())
                 .totalRisk(primary.getRiskScore())
                 .totalConfidence(primary.getConfidenceScore())
-                .aggregateScore(primary.getNumericScore())
+                .aggregateScore(primary.getNumericScore(scoringConfig))
                 .secret(primary.getSecretValue())
                 .maskedSecret(primary.getMaskedSecret())
                 .hash(fingerprint)
@@ -214,13 +216,13 @@ public class Reporter {
             log.info(SEPARATOR);
             findings.stream()
                 .filter(f -> f.getSeverity(scoringConfig) != Severity.INFO)
-                .sorted(Comparator.comparing(Finding::getNumericScore).reversed())
+                .sorted(Comparator.comparing((Finding f) -> f.getNumericScore(scoringConfig)).reversed())
                 .forEach(f -> {
                     final var severity = f.getSeverity(scoringConfig);
 
                     final var message = String.format(
                         "[%s] Score: %.1f (R:%d/C:%d) - %s",
-                        f.getPatternName(), f.getNumericScore(),
+                        f.getPatternName(), f.getNumericScore(scoringConfig),
                         f.getRiskScore(), f.getConfidenceScore(),
                         f.getContext().getPath() + ":" + f.getLineNumber());
 
