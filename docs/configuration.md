@@ -22,6 +22,7 @@ Facepalm uses a scoring engine (0-100) to determine if a finding is critical.
 
 | Parameter | Property | Default | Description |
 |-----------|----------|---------|-------------|
+| `strategy` | `scoring.strategy` | `WEIGHTED_QUADRATIC` | Strategy used to combine risk and confidence. Available values: `AVERAGE`, `GEOMETRIC`, `ROOT_MEAN_SQUARE`, `WEIGHTED_QUADRATIC`, `GATEKEEPER`. |
 | `errorThreshold` | `errorThreshold` | `80` | Score threshold for high-risk findings (Critical). |
 | `warningThreshold` | `warningThreshold` | `40` | Score threshold for moderate-risk findings (Warning). |
 | `showScoring` | `showScoring` | `false` | Log detailed scoring breakdowns for each finding. |
